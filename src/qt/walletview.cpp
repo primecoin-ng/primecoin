@@ -22,6 +22,7 @@
 #include <QVBoxLayout>
 #include <QAction>
 #include <QDesktopServices>
+#include <QStandardPaths>
 #include <QFileDialog>
 #include <QPushButton>
 
@@ -233,7 +234,7 @@ void WalletView::encryptWallet(bool status)
 
 void WalletView::backupWallet()
 {
-    QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
     if (!filename.isEmpty()) {
         if (!walletModel->backupWallet(filename)) {

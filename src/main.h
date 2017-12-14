@@ -1681,6 +1681,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    CBigNum bnPrimeChainMultiplier;
 
 
     CBlockIndex()
@@ -1706,6 +1707,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        bnPrimeChainMultiplier = 0;
     }
 
     CBlockIndex(CBlockHeader& block)
@@ -1731,6 +1733,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        bnPrimeChainMultiplier = block.bnPrimeChainMultiplier;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -1761,6 +1764,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.bnPrimeChainMultiplier = bnPrimeChainMultiplier;
         return block;
     }
 
@@ -1895,6 +1899,7 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
         READWRITE(hashBlock);
+        READWRITE(bnPrimeChainMultiplier);
     )
 
     uint256 GetBlockHash() const

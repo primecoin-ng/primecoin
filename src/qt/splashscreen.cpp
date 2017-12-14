@@ -1,5 +1,7 @@
 #include "splashscreen.h"
 #include "clientversion.h"
+
+#define __SPLASHSCREEN_CPP_
 #include "util.h"
 
 #include <QPainter>

@@ -3,7 +3,7 @@ TARGET = primecoin-qt
 macx:TARGET = "Primecoin-Qt"
 VERSION = 0.1.2
 INCLUDEPATH += src src/json src/qt
-QT += network
+QT += widgets network
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
@@ -43,7 +43,7 @@ contains(RELEASE, 1) {
     # This can be enabled for Windows, when we switch to MinGW >= 4.4.x.
 }
 # for extra security (see: https://wiki.debian.org/Hardening): this flag is GCC compiler-specific
-QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2
+QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2 -std=c++11
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
 win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
 # on Windows: enable GCC large address aware linker flag
