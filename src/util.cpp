@@ -1416,6 +1416,7 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
         ss << "(" << boost::algorithm::join(comments, "; ") << ")";
     ss << "/";
     ss << "Primecoin:" << FormatVersion(PRIMECOIN_VERSION) << "-intermediary";
+    ss << "/";
     return ss.str();
 }
 
