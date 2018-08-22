@@ -231,7 +231,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
 
                 CBlockHeader header(pindexNew->GetBlockHeader());
                 if (!CheckBlockHeaderIntegrity(header.GetHeaderHash(), pindexNew->nBits, pindexNew->bnPrimeChainMultiplier))
-                    return error("%s: CheckBlockHeaderIntegrity failed: %s", __func__, pindexNew->ToString());
+                    return error("%s: CheckBlockHeaderIntegrity failed: %s", __func__, pindexNew->ToString().c_str());
 
                 // Watch for genesis block
                 if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
