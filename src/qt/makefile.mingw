@@ -1,0 +1,371 @@
+DEPSDIR?=/usr/local
+BOOST_SUFFIX?=-mt-s
+
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+HOST?=x86_64-w64-mingw32
+CC=$(HOST)-gcc
+CXX=$(HOST)-g++
+RANLIB=$(HOST)-ranlib
+WINDRES=$(HOST)-windres
+LRELEASE=$(DEPSDIR)/native/bin/lrelease
+MOC=$(DEPSDIR)/native/bin/moc
+RCC=$(DEPSDIR)/native/bin/rcc
+UIC=$(DEPSDIR)/native/bin/uic
+
+LEVELDBDIR=$(ROOT_DIR)/../leveldb
+LEVELDB=$(LEVELDBDIR)/libleveldb.a
+MEMENV=$(LEVELDBDIR)/libmemenv.a
+
+# Preprocessor
+COMMON_DEFS=-DUNICODE -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DUSE_QRCODE -DUSE_UPNP=1 -DMINIUPNP_STATICLIB -DUSE_IPV6=1 -DWIN32 -D_MT
+QT_DEFS=-DQT_GUI -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFS=$(COMMON_DEFS) $(QT_DEFS)
+
+# Compiler flags
+CFLAGS=-Wstack-protector -fstack-protector-all -pipe -O2 -pthread
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va -static
+
+# Include path
+INTERNAL_INCLUDE_PATH= \
+    -I$(ROOT_DIR) \
+    -I$(ROOT_DIR)/obj/qt \
+    -I$(ROOT_DIR)/.. \
+    -I$(ROOT_DIR)/../leveldb/include \
+    -I$(ROOT_DIR)/../leveldb/helpers
+    
+EXTERNAL_INCLUDE_PATH= \
+    -I$(DEPSDIR)/include
+
+QT_INCLUDE_PATH= \
+    -I$(DEPSDIR)/include/QtWidgets \
+    -I$(DEPSDIR)/include/QtGui \
+    -I$(DEPSDIR)/include/QtNetwork \
+    -I$(DEPSDIR)/include/QtCore    
+    
+INCLUDE_PATH=$(INTERNAL_INCLUDE_PATH) $(EXTERNAL_INCLUDE_PATH) $(QT_INCLUDE_PATH)
+    
+# Libraries
+COMMON_LIBS= -L$(DEPSDIR)/lib \
+    -lmingw32 \
+    -ldb_cxx \
+    -lssl \
+    -lcrypto \
+    -lqrencode \
+    -lminiupnpc \
+    -lboost_system-mt-s \
+    -lboost_filesystem-mt-s \
+    -lboost_program_options-mt-s \
+    -lboost_thread_win32-mt-s \
+    -lboost_chrono-mt-s \
+    $(LEVELDB) \
+    $(MEMENV)
+
+QT_PLUGIN_LIBS= \
+    -L$(DEPSDIR)/plugins/platforms -lqminimal -lqwindows \
+    -L$(DEPSDIR)/plugins/imageformats -lqico \
+    -L$(DEPSDIR)/plugins/bearer -lqgenericbearer -lqnativewifibearer
+    
+QT_LIBS= \
+    -lQt5Widgets \
+    -lQt5Gui \
+    -lQt5Network \
+    -lQt5Core \
+    -lQt5PlatformSupport \
+    -lqtharfbuzzng \
+    -lqtpcre \
+    -lqtpng \
+    -lz \
+    -lqtmain
+    
+WINDOWS_LIBS= \
+    -limm32 \
+    -lws2_32 \
+    -lshlwapi \
+    -lmswsock \
+    -lole32 \
+    -loleaut32 \
+    -luuid \
+    -lgdi32 \
+    -lwinmm \
+    -liphlpapi
+    
+LIBS=$(COMMON_LIBS) $(QT_PLUGIN_LIBS) $(QT_LIBS) $(WINDOWS_LIBS)
+    
+OBJS= \
+    obj/alert.o \
+    obj/version.o \
+    obj/sync.o \
+    obj/util.o \
+    obj/hash.o \
+    obj/netbase.o \
+    obj/key.o \
+    obj/script.o \
+    obj/main.o \
+    obj/init.o \
+    obj/net.o \
+    obj/bloom.o \
+    obj/checkpoints.o \
+    obj/addrman.o \
+    obj/db.o \
+    obj/walletdb.o \
+    obj/wallet.o \
+    obj/keystore.o \
+    obj/bitcoinrpc.o \
+    obj/rpcdump.o \
+    obj/rpcnet.o \
+    obj/rpcmining.o \
+    obj/rpcwallet.o \
+    obj/rpcblockchain.o \
+    obj/rpcrawtransaction.o \
+    obj/crypter.o \
+    obj/protocol.o \
+    obj/noui.o \
+    obj/leveldb.o \
+    obj/txdb.o \
+    obj/prime.o \
+    obj/checkpointsync.o
+
+UIS= \
+    obj/qt/ui_sendcoinsdialog.h \
+    obj/qt/ui_addressbookpage.h \
+    obj/qt/ui_signverifymessagedialog.h \
+    obj/qt/ui_aboutdialog.h \
+    obj/qt/ui_editaddressdialog.h \
+    obj/qt/ui_transactiondescdialog.h \
+    obj/qt/ui_overviewpage.h \
+    obj/qt/ui_sendcoinsentry.h \
+    obj/qt/ui_askpassphrasedialog.h \
+    obj/qt/ui_rpcconsole.h \
+    obj/qt/ui_optionsdialog.h \
+    obj/qt/ui_qrcodedialog.h
+    
+QMS= \
+    locale/bitcoin_af_ZA.qm \
+    locale/bitcoin_cs.qm \
+    locale/bitcoin_eo.qm \
+    locale/bitcoin_fa.qm \
+    locale/bitcoin_hi_IN.qm \
+    locale/bitcoin_lt.qm \
+    locale/bitcoin_pt_PT.qm \
+    locale/bitcoin_th_TH.qm \
+    locale/bitcoin_ar.qm \
+    locale/bitcoin_cy.qm \
+    locale/bitcoin_es_CL.qm \
+    locale/bitcoin_fi.qm \
+    locale/bitcoin_hr.qm \
+    locale/bitcoin_lv_LV.qm \
+    locale/bitcoin_ro_RO.qm \
+    locale/bitcoin_tr.qm \
+    locale/bitcoin_bg.qm \
+    locale/bitcoin_da.qm \
+    locale/bitcoin_es.qm \
+    locale/bitcoin_fr_CA.qm \
+    locale/bitcoin_hu.qm \
+    locale/bitcoin_nb.qm \
+    locale/bitcoin_ru.qm \
+    locale/bitcoin_uk.qm \
+    locale/bitcoin_bs.qm \
+    locale/bitcoin_de.qm \
+    locale/bitcoin_et.qm \
+    locale/bitcoin_fr.qm \
+    locale/bitcoin_it.qm \
+    locale/bitcoin_nl.qm \
+    locale/bitcoin_sk.qm \
+    locale/bitcoin_zh_CN.qm \
+    locale/bitcoin_ca_ES.qm \
+    locale/bitcoin_el_GR.qm \
+    locale/bitcoin_eu_ES.qm \
+    locale/bitcoin_gu_IN.qm \
+    locale/bitcoin_ja.qm \
+    locale/bitcoin_pl.qm \
+    locale/bitcoin_sr.qm \
+    locale/bitcoin_zh_TW.qm \
+    locale/bitcoin_ca.qm \
+    locale/bitcoin_en.qm \
+    locale/bitcoin_fa_IR.qm \
+    locale/bitcoin_he.qm \
+    locale/bitcoin_la.qm \
+    locale/bitcoin_pt_BR.qm \
+    locale/bitcoin_sv.qm
+    
+MOCS= \
+    obj/qt/overviewpage.moc \
+    obj/qt/rpcconsole.moc
+
+MOCSCPP= \
+    obj/moc_bitcoingui.cpp \
+    obj/moc_transactiontablemodel.cpp \
+    obj/moc_addresstablemodel.cpp \
+    obj/moc_optionsdialog.cpp \
+    obj/moc_sendcoinsdialog.cpp \
+    obj/moc_addressbookpage.cpp \
+    obj/moc_signverifymessagedialog.cpp \
+    obj/moc_aboutdialog.cpp \
+    obj/moc_editaddressdialog.cpp \
+    obj/moc_bitcoinaddressvalidator.cpp \
+    obj/moc_clientmodel.cpp \
+    obj/moc_guiutil.cpp \
+    obj/moc_optionsmodel.cpp \
+    obj/moc_monitoreddatamapper.cpp \
+    obj/moc_transactiondesc.cpp \
+    obj/moc_transactiondescdialog.cpp \
+    obj/moc_bitcoinamountfield.cpp \
+    obj/moc_transactionfilterproxy.cpp \
+    obj/moc_transactionview.cpp \
+    obj/moc_walletmodel.cpp \
+    obj/moc_walletview.cpp \
+    obj/moc_walletstack.cpp \
+    obj/moc_walletframe.cpp \
+    obj/moc_overviewpage.cpp \
+    obj/moc_csvmodelwriter.cpp \
+    obj/moc_sendcoinsentry.cpp \
+    obj/moc_qvalidatedlineedit.cpp \
+    obj/moc_bitcoinunits.cpp \
+    obj/moc_qvaluecombobox.cpp \
+    obj/moc_askpassphrasedialog.cpp \
+    obj/moc_notificator.cpp \
+    obj/moc_paymentserver.cpp \
+    obj/moc_rpcconsole.cpp \
+    obj/moc_splashscreen.cpp \
+    obj/moc_qrcodedialog.cpp
+  
+QTOBJS= \
+    obj/qt/bitcoin.o \
+    obj/qt/bitcoingui.o \
+    obj/qt/transactiontablemodel.o \
+    obj/qt/addresstablemodel.o \
+    obj/qt/optionsdialog.o \
+    obj/qt/sendcoinsdialog.o \
+    obj/qt/addressbookpage.o \
+    obj/qt/signverifymessagedialog.o \
+    obj/qt/aboutdialog.o \
+    obj/qt/editaddressdialog.o \
+    obj/qt/bitcoinaddressvalidator.o \
+    obj/qt/clientmodel.o \
+    obj/qt/guiutil.o \
+    obj/qt/transactionrecord.o \
+    obj/qt/optionsmodel.o \
+    obj/qt/monitoreddatamapper.o \
+    obj/qt/transactiondesc.o \
+    obj/qt/transactiondescdialog.o \
+    obj/qt/bitcoinstrings.o \
+    obj/qt/bitcoinamountfield.o \
+    obj/qt/transactionfilterproxy.o \
+    obj/qt/transactionview.o \
+    obj/qt/walletmodel.o \
+    obj/qt/walletview.o \
+    obj/qt/walletstack.o \
+    obj/qt/walletframe.o \
+    obj/qt/overviewpage.o \
+    obj/qt/csvmodelwriter.o \
+    obj/qt/sendcoinsentry.o \
+    obj/qt/qvalidatedlineedit.o \
+    obj/qt/bitcoinunits.o \
+    obj/qt/qvaluecombobox.o \
+    obj/qt/askpassphrasedialog.o \
+    obj/qt/notificator.o \
+    obj/qt/paymentserver.o \
+    obj/qt/rpcconsole.o \
+    obj/qt/splashscreen.o \
+    obj/qt/qrcodedialog.o \
+    obj/qt/qrc_bitcoin.o \
+    obj/qt/moc_bitcoingui.o \
+    obj/qt/moc_transactiontablemodel.o \
+    obj/qt/moc_addresstablemodel.o \
+    obj/qt/moc_optionsdialog.o \
+    obj/qt/moc_sendcoinsdialog.o \
+    obj/qt/moc_addressbookpage.o \
+    obj/qt/moc_signverifymessagedialog.o \
+    obj/qt/moc_aboutdialog.o \
+    obj/qt/moc_editaddressdialog.o \
+    obj/qt/moc_bitcoinaddressvalidator.o \
+    obj/qt/moc_clientmodel.o \
+    obj/qt/moc_guiutil.o \
+    obj/qt/moc_optionsmodel.o \
+    obj/qt/moc_monitoreddatamapper.o \
+    obj/qt/moc_transactiondesc.o \
+    obj/qt/moc_transactiondescdialog.o \
+    obj/qt/moc_bitcoinamountfield.o \
+    obj/qt/moc_transactionfilterproxy.o \
+    obj/qt/moc_transactionview.o \
+    obj/qt/moc_walletmodel.o \
+    obj/qt/moc_walletview.o \
+    obj/qt/moc_walletstack.o \
+    obj/qt/moc_walletframe.o \
+    obj/qt/moc_overviewpage.o \
+    obj/qt/moc_csvmodelwriter.o \
+    obj/qt/moc_sendcoinsentry.o \
+    obj/qt/moc_qvalidatedlineedit.o \
+    obj/qt/moc_bitcoinunits.o \
+    obj/qt/moc_qvaluecombobox.o \
+    obj/qt/moc_askpassphrasedialog.o \
+    obj/qt/moc_notificator.o \
+    obj/qt/moc_paymentserver.o \
+    obj/qt/moc_rpcconsole.o \
+    obj/qt/moc_splashscreen.o \
+    obj/qt/moc_qrcodedialog.o \
+    obj/qt/bitcoin-qt_res.o \
+    obj/qt/primecoin-qt_plugin_import.o
+
+all: primecoin-qt.exe    
+    
+$(LEVELDB):
+	cd $(LEVELDBDIR) && CC=$(CC) CXX=$(CXX) TARGET_OS=OS_WINDOWS_CROSSCOMPILE make OPT="-pipe -O2 -fno-keep-inline-dllexport -D_FORTIFY_SOURCE=2" libleveldb.a libmemenv.a
+	cd $(LEVELDBDIR) && $(RANLIB) $(LEVELDB)
+	cd $(LEVELDBDIR) && $(RANLIB) $(MEMENV)
+    
+# create plugin import file    
+obj/qt/primecoin-qt_plugin_import.cpp:
+	echo "#include <QtPlugin>" > $@
+	echo "Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)" >> $@
+	echo "Q_IMPORT_PLUGIN(QICOPlugin)" >> $@
+	echo "Q_IMPORT_PLUGIN(QGenericEnginePlugin)" >> $@
+	echo "Q_IMPORT_PLUGIN(QNativeWifiEnginePlugin)" >> $@
+    
+# (uic) .ui -> .cpp
+obj/qt/ui_%.h: forms/%.ui
+	mkdir -p obj/qt
+	$(UIC) $< -o $@
+
+# translations
+locale/%.qm: locale/%.ts
+	$(LRELEASE) $< -qm $@
+
+# resource compile
+obj/qt/qrc_bitcoin.cpp: bitcoin.qrc $(QMS)
+	$(RCC) -name bitcoin $< -o $@
+obj/qt/bitcoin-qt_res.o: res/bitcoin-qt.rc
+	$(WINDRES) -i $< -o $@ --include-dir=$(ROOT_DIR)/res $(DEFS)
+
+# (moc) .cpp -> .moc
+obj/qt/%.moc: %.cpp
+	$(MOC) $(DEFS) $(INCLUDE_PATH) $< -o $@    
+    
+# (moc) .h -> moc_*.cpp
+obj/qt/moc_overviewpage.cpp: overviewpage.h obj/qt/overviewpage.moc
+	$(MOC) $(DEFS) $(INCLUDE_PATH) $< -o $@
+obj/qt/moc_rpcconsole.cpp: rpcconsole.h obj/qt/rpcconsole.moc
+	$(MOC) $(DEFS) $(INCLUDE_PATH) $< -o $@
+obj/qt/moc_%.cpp: %.h
+	$(MOC) $(DEFS) $(INCLUDE_PATH) $< -o $@
+
+# compile .cpp moc files
+obj/qt/moc_%.o: obj/qt/moc_%.cpp
+	$(CXX) $(CFLAGS) $(DEFS) $(INCLUDE_PATH) -c $< -o $@
+
+# compile primecoind files
+obj/qt/qrc_bitcoin.o: obj/qt/qrc_bitcoin.cpp
+	$(CXX) $(CFLAGS) $(DEFS) $(INCLUDE_PATH) -c $< -o $@
+obj/qt/primecoin-qt_plugin_import.o: obj/qt/primecoin-qt_plugin_import.cpp
+	$(CXX) $(CFLAGS) $(DEFS) $(INCLUDE_PATH) -c $< -o $@
+obj/%.o: ../%.cpp $(UIS) $(MOCS)
+	$(CXX) $(CFLAGS) $(DEFS) $(INCLUDE_PATH) -c $< -o $@
+ 
+primecoin-qt.exe: $(OBJS:obj/%=obj/%) $(QTOBJS:obj/qt/%=obj/qt/%) $(LEVELDB)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -mwindows -o $@ $(LIBPATHS) $(OBJS) $(QTOBJS) $(LIBS)
+
+clean:
+	rm -f primecoin-qt.exe
+	rm -rf obj/*
+	cd $(LEVELDBDIR) && $(MAKE) TARGET_OS=NATIVE_WINDOWS clean
